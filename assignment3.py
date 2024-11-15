@@ -6,8 +6,8 @@ def exploration(stored_list, gamma, alpha, dict_of_qvalues):
     previous_qvalues = {state: actions.copy() for state, actions in dict_of_qvalues.items()}
     convergence_threshold = 1e-9  # Convergence threshold for Q-value changes
     print(dict_of_qvalues)
-    for i in range(1):
-    # while True:
+    # for i in range(1):
+    while True:
         for i in range(len(stored_list) - 1):
             prev_state, prev_action, _ = stored_list[i]
             curr_state, curr_action, _ = stored_list[i + 1]
@@ -28,24 +28,24 @@ def exploration(stored_list, gamma, alpha, dict_of_qvalues):
                 gamma, alpha, dict_of_qvalues, prev_state, curr_state, prev_action, curr_action
             )
 
-        # # Check for convergence
-        # has_converged = True
-        # for state in dict_of_qvalues:
-        #     for action in dict_of_qvalues[state]:
-        #         prev_value = previous_qvalues.get(state, {}).get(action, float('inf'))
-        #         curr_value = dict_of_qvalues[state][action]
-        #         if abs(curr_value - prev_value) >= convergence_threshold:
-        #             has_converged = False
-        #             break
-        #     if not has_converged:
-        #         break
+        # Check for convergence
+        has_converged = True
+        for state in dict_of_qvalues:
+            for action in dict_of_qvalues[state]:
+                prev_value = previous_qvalues.get(state, {}).get(action, float('inf'))
+                curr_value = dict_of_qvalues[state][action]
+                if abs(curr_value - prev_value) >= convergence_threshold:
+                    has_converged = False
+                    break
+            if not has_converged:
+                break
 
-        # # If all Q-values have converged, exit the loop
-        # if has_converged:
-        #     break
-        # else:
-        #     # Update previous Q-values for the next iteration
-        #     previous_qvalues = {state: actions.copy() for state, actions in dict_of_qvalues.items()}
+        # If all Q-values have converged, exit the loop
+        if has_converged:
+            break
+        else:
+            # Update previous Q-values for the next iteration
+            previous_qvalues = {state: actions.copy() for state, actions in dict_of_qvalues.items()}
 
     return dict_of_qvalues
 

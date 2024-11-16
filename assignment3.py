@@ -5,8 +5,8 @@ def exploration(stored_list, gamma, alpha, dict_of_qvalues):
     # Initialize convergence tracking
     previous_qvalues = {state: actions.copy() for state, actions in dict_of_qvalues.items()}
     convergence_threshold = 1e-9  # Convergence threshold for Q-value changes
-    print(dict_of_qvalues)
-    # for i in range(1):
+    index = 0
+    #Loop until convergance
     while True:
         for i in range(len(stored_list) - 1):
             prev_state, prev_action, _ = stored_list[i]
@@ -25,8 +25,9 @@ def exploration(stored_list, gamma, alpha, dict_of_qvalues):
 
             # Update Q-value using temporal difference learning
             stored_list[i][2], dict_of_qvalues = temporal_difference_qlearning(
-                gamma, alpha, dict_of_qvalues, prev_state, curr_state, prev_action, curr_action
+                gamma, alpha, dict_of_qvalues, prev_state, curr_state, prev_action
             )
+        index = index + 1 
 
         # Check for convergence
         has_converged = True
@@ -50,7 +51,7 @@ def exploration(stored_list, gamma, alpha, dict_of_qvalues):
     return dict_of_qvalues
 
 
-def temporal_difference_qlearning(gamma, alpha, dict_of_qvalues, prev_state, curr_state, prev_action, curr_action):
+def temporal_difference_qlearning(gamma, alpha, dict_of_qvalues, prev_state, curr_state, prev_action):
     # Handle unseen actions by initializing or borrowing similar Q-values
     if prev_action not in dict_of_qvalues[prev_state]:
         dict_of_qvalues[prev_state][prev_action] = -1  # or a heuristic value if available
@@ -63,8 +64,6 @@ def temporal_difference_qlearning(gamma, alpha, dict_of_qvalues, prev_state, cur
     # Update Q-value
     dict_of_qvalues[prev_state][prev_action] = qvalue
 
-    # if(prev_state == "EF" and prev_action == "N"):
-    #     print(qvalue)
     return qvalue, dict_of_qvalues
 
 
@@ -85,8 +84,6 @@ class td_qlearning:
     
     def __init__(self, directory):
       self.q = 0
-      # self.actions
-      # self.states
       self.trial = []
       index = 0
       self.stateAndAction = []
@@ -96,39 +93,44 @@ class td_qlearning:
           with open(filepath, newline='') as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
-              # temp= []
-              # print(row[0])
+              #Add all states in the first row to a list
               self.stateAndAction.append([row[0]])
+              #For every state, store it's appropriate action inside another array
               self.stateAndAction[index].append(row[1])
+              #set it's qvalue to none
               self.stateAndAction[index].append(None)  
+              #set the qvalue to the reward of +10 or -10 depending on the case
               if(row[0][0] == row[0][1]):
                 self.stateAndAction[index][2] = (-10)  
               if(row[0][0] == 'B'):
                   self.stateAndAction[index][2] = (+10)  
               index = index + 1
               if(row[0][0] == 'B' or row[0][0] == row[0][1] ):
+                 #explore the trial we are at if we reach a terminal state
                  exploration(self.stateAndAction, self.gamma, self.alpha, self.dict_of_qvalues)
-
+                 #store the qvalues of this trial into another array then clear the dictionary.
                  self.all_dicts.append(self.dict_of_qvalues)
                  self.stateAndAction = []
                  index = 0
                              
                         
     def qvalue(self, state, action):
-        print(self.dict_of_qvalues)
+        #check if a state and action is in any of the trials
         if(state in self.dict_of_qvalues):
             if(action in self.dict_of_qvalues[state]):
+                #if yes the qvalue returned will be that of the states
                 self.q = self.dict_of_qvalues[state][action]
         else:
+            #If not then return the reward. r(s) = -10 if P_mouse == P_cat and P_mouse != P_cat
             if(state[0] == state[1] and state[0] != 'B'):
                 return -10
+            #r(s) = +10 if P_mouse == B
             elif(state[0] == 'B' ):
                 return 10
+            #else r(s) = -1
             else:
                 return -1
                 
-            
-        # print( "state: ", state, " action: ", action, ": ", self.q)
         return self.q
 
     def policy(self, state):
@@ -136,40 +138,36 @@ class td_qlearning:
         if state in self.dict_of_qvalues:
             # Find the action (key) with the maximum Q-value
             max_action = max(self.dict_of_qvalues[state], key=self.dict_of_qvalues[state].get)
-            max_value = self.dict_of_qvalues[state][max_action]
-            print("state", state, ":", max_action, "(Q-value:", max_value, ")")
             return max_action
         else:
-            print("state", state, ": NBD")
             return "N"
 
-def main():
-    td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example0/Trials").qvalue('DA', 'E')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example0/Trials").policy('EB')
+#Main function for testing.
+
+# def main():
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example0/Trials").qvalue('DA', 'E'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example0/Trials").policy('EB'))
     
-    # td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").qvalue('FB', 'D')
-    # print(td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example1/Trials").qvalue('AC', 'D'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").qvalue('FB', 'D'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").qvalue('AC', 'D'))
 
-    # td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").qvalue('EF', 'N')
-
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example1/Trials").policy('FC')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example1/Trials").policy('FC')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example1/Trials").policy('AC')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example1/Trials").policy('FC')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example1/Trials").policy('FB')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example1/Trials").policy('AA')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example1/Trials").policy('AA')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example1/Trials").policy('EF')
-
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example2/Trials").qvalue('DC', 'E')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example2/Trials").qvalue('AE', 'B')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example2/Trials").qvalue('EC', 'N')
-
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example2/Trials").policy('DC')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example2/Trials").policy('AE')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example2/Trials").policy('DA')
-    # td_qlearning(directory="C:/Users/abdul/Downloads/Examples (1)/Examples/Example2/Trials").policy('EC')
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").qvalue('EF', 'N'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").policy('FC'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").policy('FC'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").policy('AC'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").policy('FC'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").policy('FB'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").policy('AA'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").policy('AA'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example1/Trials").policy('EF'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example2/Trials").qvalue('DC', 'E'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example2/Trials").qvalue('AE', 'B'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example2/Trials").qvalue('EC', 'N'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example2/Trials").policy('DC'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example2/Trials").policy('AE'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example2/Trials").policy('DA'))
+#     print(td_qlearning(directory="C:/Users/abdul/Downloads/3106A3/Examples/Example2/Trials").policy('EC'))
 
 
 
-main()
+# main()
